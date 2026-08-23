@@ -1,5 +1,5 @@
 # SESI 1
-# TAMPILKANLAH 10 PEMESANAN TERBARU YANG TELAH SELESAI PADA DATABASE THE LOO ECOMMERCE
+# TAMPILKANLAH 10 PEMESANAN TERBARU YANG TELAH SELESAI PADA DATABASE THELOOK ECOMMERCE
 
 SELECT order_id, status, created_at from bigquery-public-data.thelook_ecommerce.orders
 where status = "Complete"
@@ -100,7 +100,7 @@ GROUP BY 1, 2, 3
 ORDER BY total_pembelian DESC
 LIMIT 10;
 
----------------------------
+------------------------------------------------------------------
 # SESI 4
 # 5 country dengan jumlah order terbesar
 # bisa pakai tabel user, order, order_items
@@ -116,12 +116,70 @@ count (order_id) as count_order,
 count (distinct(order_id)) as unique_count_order from bigquery-public-data.thelook_ecommerce.order_items
 
 
-# OPSI 1
-SELECT u.country, count (distinct(o.order_id)) as jumlah_order
-from bigquery-public-data.thelook_ecommerce.users u
-inner join bigquery-public-data.thelook_ecommerce.orders o
-on u.id = o.user_id
-group by u.country
-order by jumlah_order DESC
-limit 5;
+# OPSI 1 (MENGGUNAKAN TABEL USER & ORDER ITEMS)
+SELECT u.country, COUNT (DISTINCT(oi.order_id)) as jumlah_order
+FROM bigquery-public-data.thelook_ecommerce.users u
+INNER JOIN bigquery-public-data.thelook_ecommerce.order_items oi
+ON u.id = oi.user_id
+GROUP BY u.country
+ORDER BY jumlah_order DESC
+LIMIT 5;
 
+# OPSI 2 (MENGGUNAKAN TABEL USER & ORDERS)
+SELECT u.country, COUNT(*) AS jumlah_order
+FROM bigquery-public-data.thelook_ecommerce.users u
+INNER JOIN bigquery-public-data.thelook_ecommerce.orders o
+ON u.id = o.user_id
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 5;
+
+# COUNTRY MANA YANG BERADA DI RANKING 1? DAN BERAPA TOTAL ORDER COUNTRY TERSEBUT?
+SELECT u.country, COUNT(*) AS jumlah_order
+FROM bigquery-public-data.thelook_ecommerce.users u
+INNER JOIN bigquery-public-data.thelook_ecommerce.orders o
+ON u.id = o.user_id
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 1;
+
+# APAKAH RANKING BERUBAH KETIKA HANYA MENGHITUNG COMPLETE ORDER?
+SELECT u.country,
+       COUNT(*) AS jumlah_order
+FROM bigquery-public-data.thelook_ecommerce.users u
+INNER JOIN bigquery-public-data.thelook_ecommerce.orders o
+ON u.id = o.user_id
+WHERE o.status = 'Complete'
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 5;
+
+# STATUS ORDER APA YANG PALING BANYAK
+SELECT status, COUNT (*) AS jumlah_order
+FROM bigquery-public-data.thelook_ecommerce.orders
+GROUP BY 1
+ORDER BY 2 DESC;
+---------------------------------------------------------------------
+
+# LATIHAN SESI 5
+
+# Ada berapa banyak PRODUCT yang sudah terjual? Dan berapa harga rata-rata jualnya? (Retail Price)
+
+SELECT COUNT(DISTINCT(p.id)) AS product_id, AVG(p.retail_price) AS retail_price_avg
+FROM bigquery-public-data.thelook_ecommerce.products p
+INNER JOIN bigquery-public-data.thelook_ecommerce.order_items oi
+ON p.id = oi.product_id
+WHERE oi.status = "Complete"
+
+
+# Tampilkan PRODUCT yang sudah terjual dengan rata-rata RETAIL PRICE dan rata-rata SALE PRICE. Urutkan berdasarkan rata-rata RETAIL PRICE terbesar sampai terkecil. Menggunakan kolom PRODUCTS & ORDER_ITEMS
+
+-- SELECT DISTINCT STATUS FROM bigquery-public-data.thelook_ecommerce.order_items
+
+SELECT p.id AS product_id, AVG(p.retail_price) AS retail_price, AVG(oi.sale_price) AS sale_price
+FROM bigquery-public-data.thelook_ecommerce.products p
+INNER JOIN bigquery-public-data.thelook_ecommerce.order_items oi
+ON p.id = oi.product_id
+WHERE oi.status = "Complete"
+GROUP BY 1
+ORDER BY 2 DESC;
